@@ -1,10 +1,13 @@
 # Make file
 
-net367: host.o packet.o man.o main.o net.o
-	gcc -o net367 host.o man.o main.o net.o packet.o
+net367: host.o packet.o man.o main.o net.o switch.o
+	gcc -o net367 host.o man.o main.o net.o packet.o switch.o
 
 main.o: main.c
 	gcc -c main.c
+
+switch.o: switch.c
+	gcc -c switch.c
 
 host.o: host.c 
 	gcc -c host.c  
