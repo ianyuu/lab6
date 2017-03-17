@@ -12,7 +12,6 @@
 
 #include "main.h"
 #include "net.h"
-#include "man.h"
 #include "host.h"
 #include "packet.h"
 #include "switch.h"
