@@ -8,11 +8,4 @@ struct forwarding_table_entry {
 	int port;
 };
 
-struct forwarding_table {
-
-};
-
-struct network_switch {
-	int port_number;
-	int port_count;
-};
+void switch_main(int host_id);

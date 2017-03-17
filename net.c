@@ -445,7 +445,7 @@ int node_id;
 	 * private global variables.
 	 */
 fscanf(fp, "%d", &node_num);
-printf("Number of Nodes = %d: \n", node_num);
+printf("Number of Nodes = %d \n", node_num);
 g_net_node_num = node_num;
 
 if (node_num < 1) { 
@@ -461,6 +461,11 @@ else {
 		if (node_type == 'H') {
 			fscanf(fp, " %d ", &node_id);
 			g_net_node[i].type = HOST;
+			g_net_node[i].id = node_id;
+		}
+		else if (node_type == 'S') {
+			fscanf(fp, " %d ", &node_id);
+			g_net_node[i].type = SWITCH;
 			g_net_node[i].id = node_id;
 		}
 		else {
