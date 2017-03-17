@@ -56,5 +56,14 @@ for (int k = 0; k < node_port_num; k++) {
 	p = p->next;
 }
 
+/* Initialize Job Queue */
+
+/* Initialize Forwarding Table */
+struct forwarding_table_entry forwarding_table[node_port_num];
+
+
 
 }
+
+
+
