@@ -525,7 +525,7 @@ for (i=0; i<g_net_node_num; i++) {
 	        printf("   Node %d HOST\n", g_net_node[i].id);
 	}
 	else if (g_net_node[i].type == SWITCH) {
-		printf(" SWITCH\n");
+		printf("   Node %d SWITCH\n", g_net_node[i].id);
 	}
 	else {
 		printf(" Unknown Type\n");

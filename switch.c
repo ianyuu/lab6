@@ -55,7 +55,6 @@ p = node_port_list;
 for (int k = 0; k < node_port_num; k++) {
 	node_port[k] = p;
 	p = p->next;
-	printf("%d\n", node_port[k]);
 }
 
 
