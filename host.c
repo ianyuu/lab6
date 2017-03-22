@@ -206,6 +206,7 @@ int job_q_num(struct job_queue *j_q)
 return j_q->occ;
 }
 
+
 /*
  *  Main 
  */

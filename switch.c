@@ -19,6 +19,8 @@
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
 
 
+void job_q_init(struct job_queue *j_q);
+
 void switch_main(int host_id) {
 
 struct net_port *node_port_list;
@@ -33,7 +35,7 @@ struct host_job *new_job;
 struct host_job *new_job2;
 
 struct job_queue job_q;
-
+int n;
 /*
  * Create array node_port[] that stores the network link ports
  * at the switch.  The number of ports on switch is node_port_num.
@@ -57,13 +59,30 @@ for (int k = 0; k < node_port_num; k++) {
 }
 
 /* Initialize Job Queue */
+job_q_init(&job_q);
 
 /* Initialize Forwarding Table */
 struct forwarding_table_entry forwarding_table[node_port_num];
 
+/*
+ * Get packets from incoming ports and translate to jobs.
+ * Put jobs in job queue
+ */
 
-
+while(1) {
+	//Scans All Ports
+	for (int i = 0; i < node_port_num; i++) { 
+		in_packet = (struct packet *) malloc(sizeof(struct packet));
+		n = packet_recv(node_port[i], in_packet);	
+		
+		//If switch receives packet, create new job
+		if (n > 0) {
+			new_job = (struct host_job *) malloc(sizeof(struct host_job));
+			new_job->in_port_index = i;
+			new_job->packet = in_packet;
+		}
+	}
 }
 
-
+}
 
