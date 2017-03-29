@@ -20,8 +20,10 @@
 
 
 void job_q_init(struct job_queue *j_q);
-
+void job_q_add(struct job_queue *j_q, struct host_job *j);
+int job_q_num(struct job_queue *j_q);
 void switch_main(int host_id) {
+struct host_job *job_q_remove(struct job_queue *j_q);
 
 struct net_port *node_port_list;
 struct net_port **node_port;
@@ -80,9 +82,39 @@ while(1) {
 			new_job = (struct host_job *) malloc(sizeof(struct host_job));
 			new_job->in_port_index = i;
 			new_job->packet = in_packet;
+			
+			job_q_add(&job_q, new_job);
+			free(in_packet);
+			free(new_job);
 		}
 	}
+		//Execute one job from queue
+		if (job_q_num(&job_q) > 0) {
+			new_job = job_q_remove(&job_q);
+		}
+		new_packet = new_job->packet; 
+
+		/*
+		 * fix this for loop too
+		 */
+		for (int j = 0; j < node_port_num; j++) {
+			if ((forwarding_table[j].valid == 1) && (new_packet->dst == forwarding_table[j].dst_host_id )) {
+			//forward packet to correct port	
+			}
+		}
+
+		/*
+		 * need to fix this for loop
+		 */
+		for (int j = 0; j < node_port_num; j++) {
+			if (forwarding_table[j].valid == 0) {
+				forwarding_table[j].valid = 1;
+				forwarding_table[j].dst_host_id = new_packet->dst;
+				forwarding_table[j].port;
+			}
+		}
+}
 }
 
-}
+
 

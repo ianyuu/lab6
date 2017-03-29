@@ -172,6 +172,7 @@ if (j_q->head == NULL ) {
 	j_q->head = j;
 	j_q->tail = j;
 	j_q->occ = 1;
+	j->next = NULL;
 }
 else {
 	(j_q->tail)->next = j;

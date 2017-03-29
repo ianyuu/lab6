@@ -4,7 +4,7 @@
 
 struct forwarding_table_entry {
 	int valid;
-	int host_id;
+	int dst_host_id;
 	int port;
 };
 
