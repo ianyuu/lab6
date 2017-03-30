@@ -38,6 +38,8 @@ struct host_job *new_job2;
 
 struct job_queue job_q;
 int n;
+char packet_dest, packet_src;
+char new_entry;
 /*
  * Create array node_port[] that stores the network link ports
  * at the switch.  The number of ports on switch is node_port_num.
@@ -90,28 +92,35 @@ while(1) {
 	}
 		//Execute one job from queue
 		if (job_q_num(&job_q) > 0) {
+			new_entry = '1';
 			new_job = job_q_remove(&job_q);
-		}
-		new_packet = new_job->packet; 
+			new_packet = new_job->packet; 
+			packet_dest = new_packet->dst;
+			packet_src = new_packet->src;
+			/*
+			 * Check if entry exists in forwarding table 
+			 */
+				for (int j = 0; j < node_port_num; j++) {
+					if ((forwarding_table[j].valid == 1) && (new_packet->dst == forwarding_table[j].dst_host_id )) {
+						new_entry = '0';
+					}
+				}
 
-		/*
-		 * fix this for loop too
-		 */
-		for (int j = 0; j < node_port_num; j++) {
-			if ((forwarding_table[j].valid == 1) && (new_packet->dst == forwarding_table[j].dst_host_id )) {
-			//forward packet to correct port	
-			}
-		}
-
-		/*
-		 * need to fix this for loop
-		 */
-		for (int j = 0; j < node_port_num; j++) {
-			if (forwarding_table[j].valid == 0) {
-				forwarding_table[j].valid = 1;
-				forwarding_table[j].dst_host_id = new_packet->dst;
-				forwarding_table[j].port;
-			}
+			/*
+			 * need to fix this for loop
+			 * If packet wasn't already added, add it in next available entry.
+			 * --This needs to send out on all ports--
+			 */
+				for (int j = 0; j < node_port_num; j++) {
+					if ((forwarding_table[j].valid == 0) && (new_entry == '1')) {
+						forwarding_table[j].valid = 1;
+						forwarding_table[j].dst_host_id = new_packet->dst;
+						forwarding_table[j].port;
+					}
+				}
+			/*
+			 * Add src and destination to forwarding table
+			 */
 		}
 }
 }
