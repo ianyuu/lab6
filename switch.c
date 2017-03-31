@@ -34,12 +34,11 @@ struct packet *new_packet;
 
 struct net_port *p;
 struct host_job *new_job;
-struct host_job *new_job2;
 
 struct job_queue job_q;
 int n;
-char packet_dest, packet_src;
-char new_entry;
+char new_entry, entry_exists;
+
 /*
  * Create array node_port[] that stores the network link ports
  * at the switch.  The number of ports on switch is node_port_num.
@@ -67,7 +66,11 @@ job_q_init(&job_q);
 
 /* Initialize Forwarding Table */
 struct forwarding_table_entry forwarding_table[node_port_num];
-
+for (int i = 0; i < node_port_num; i++) {
+	forwarding_table[i].valid = 0;
+	forwarding_table[i].dst_host_id = 0;
+	forwarding_table[i].port = 0;
+}
 /*
  * Get packets from incoming ports and translate to jobs.
  * Put jobs in job queue
@@ -86,44 +89,68 @@ while(1) {
 			new_job->packet = in_packet;
 			
 			job_q_add(&job_q, new_job);
-			free(in_packet);
 			free(new_job);
+			free(in_packet);
 		}
 	}
 		//Execute one job from queue
 		if (job_q_num(&job_q) > 0) {
 			new_entry = '1';
+			entry_exists = '0';
+			new_packet = (struct packet *)malloc(sizeof(struct packet));
 			new_job = job_q_remove(&job_q);
-			new_packet = new_job->packet; 
-			packet_dest = new_packet->dst;
-			packet_src = new_packet->src;
+			new_packet = new_job->packet;
 			/*
 			 * Check if entry exists in forwarding table 
 			 */
 				for (int j = 0; j < node_port_num; j++) {
 					if ((forwarding_table[j].valid == 1) && (new_packet->dst == forwarding_table[j].dst_host_id )) {
 						new_entry = '0';
+
+						//Send packet to correct port
+						packet_send(node_port[forwarding_table[j].port], new_packet);
+					}
+					if ((forwarding_table[j].valid == 1) && (forwarding_table[j].dst_host_id == (int)new_packet->src)) {
+						entry_exists = '1';
 					}
 				}
-
 			/*
-			 * need to fix this for loop
-			 * If packet wasn't already added, add it in next available entry.
-			 * --This needs to send out on all ports--
+			 * Adds source packet to forwarding table.
 			 */
 				for (int j = 0; j < node_port_num; j++) {
-					if ((forwarding_table[j].valid == 0) && (new_entry == '1')) {
+					if ((forwarding_table[j].valid == 0) && (entry_exists == '0')) {
 						forwarding_table[j].valid = 1;
-						forwarding_table[j].dst_host_id = new_packet->dst;
-						forwarding_table[j].port;
+						forwarding_table[j].dst_host_id = (int)new_packet->src;
+						forwarding_table[j].port = (int)new_job->in_port_index; //node port number
+						break;
 					}
 				}
-			/*
-			 * Add src and destination to forwarding table
-			 */
+				if (new_entry == '1') {
+					/* Sends packet on all ports except source port */
+					for (int j = 0; j < node_port_num; j++) {
+						if (j != new_job->in_port_index)  {
+							printf("Sending on port %d...\n", j);
+							packet_send(node_port[j], new_packet);
+						}
+					}	
+				}
+				printf("---------------------------------------\n");
+				printf("Valid\t");
+				printf("Destination (Host ID)\t");
+				printf("Port #\t\n");
+				for (int j = 0; j < node_port_num; j++) {
+					printf("%d\t%d\t\t\t%d\n", forwarding_table[j].valid, forwarding_table[j].dst_host_id, forwarding_table[j].port);
+				}
+				printf("---------------------------------------\n");
+				free(new_packet);
 		}
-}
-}
+		/* Sleep for 10 ms */
+		usleep(TENMILLISEC);
+
+
+} /* End of while */
+
+} /* end of main */
 
 
 
