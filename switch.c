@@ -126,22 +126,24 @@ while(1) {
 					}
 				}
 				if (new_entry == '1') {
-					/* Sends packet on all ports except source port */
+					/* Sends packet on all ports except source port
+					 * Should it send only on unknown ports?
+					 **/
 					for (int j = 0; j < node_port_num; j++) {
 						if (j != new_job->in_port_index)  {
-							printf("Sending on port %d...\n", j);
+							//printf("Sending on port %d...\n", j);
 							packet_send(node_port[j], new_packet);
 						}
 					}	
 				}
-				printf("---------------------------------------\n");
-				printf("Valid\t");
-				printf("Destination (Host ID)\t");
-				printf("Port #\t\n");
-				for (int j = 0; j < node_port_num; j++) {
-					printf("%d\t%d\t\t\t%d\n", forwarding_table[j].valid, forwarding_table[j].dst_host_id, forwarding_table[j].port);
-				}
-				printf("---------------------------------------\n");
+				//printf("---------------------------------------\n");
+				//printf("Valid\t");
+				//printf("Destination (Host ID)\t");
+				//printf("Port #\t\n");
+				//for (int j = 0; j < node_port_num; j++) {
+				//	printf("%d\t%d\t\t\t%d\n", forwarding_table[j].valid, forwarding_table[j].dst_host_id, forwarding_table[j].port);
+				//}
+				//printf("---------------------------------------\n");
 				free(new_packet);
 		}
 		/* Sleep for 10 ms */
