@@ -22,7 +22,9 @@
 void job_q_init(struct job_queue *j_q);
 void job_q_add(struct job_queue *j_q, struct host_job *j);
 int job_q_num(struct job_queue *j_q);
+
 void switch_main(int host_id) {
+
 struct host_job *job_q_remove(struct job_queue *j_q);
 
 struct net_port *node_port_list;
@@ -131,19 +133,19 @@ while(1) {
 					 **/
 					for (int j = 0; j < node_port_num; j++) {
 						if (j != new_job->in_port_index)  {
-							//printf("Sending on port %d...\n", j);
+							printf("Sending on port %d...\n", j);
 							packet_send(node_port[j], new_packet);
 						}
 					}	
 				}
-				//printf("---------------------------------------\n");
-				//printf("Valid\t");
-				//printf("Destination (Host ID)\t");
-				//printf("Port #\t\n");
-				//for (int j = 0; j < node_port_num; j++) {
-				//	printf("%d\t%d\t\t\t%d\n", forwarding_table[j].valid, forwarding_table[j].dst_host_id, forwarding_table[j].port);
-				//}
-				//printf("---------------------------------------\n");
+				printf("---------------------------------------\n");
+				printf("Valid\t");
+				printf("Destination (Host ID)\t");
+				printf("Port #\t\n");
+				for (int j = 0; j < node_port_num; j++) {
+					printf("%d\t%d\t\t\t%d\n", forwarding_table[j].valid, forwarding_table[j].dst_host_id, forwarding_table[j].port);
+				}
+				printf("---------------------------------------\n");
 				free(new_packet);
 		}
 		/* Sleep for 10 ms */
