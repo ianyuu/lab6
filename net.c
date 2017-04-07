@@ -511,6 +511,9 @@ else {
 			g_net_link[i].pipe_node0 = node0;
 			g_net_link[i].pipe_node1 = node1;
 		}
+		else if (link_type == 'S') {
+			/* Setup socket stuff */
+		}
 		else {
 			printf("   net.c: Unidentified link type\n");
 		}
