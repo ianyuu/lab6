@@ -740,22 +740,12 @@ while(1) {
     	        new_job2->fname_upload[i] = new_job->packet->payload[i]; 
             }
     	    new_job2->fname_upload[i] = '\0';
-    	    
+    	    printf("File name: %s\n", new_job2->fname_upload);
     	    
     	    job_q_add(&job_q, new_job2);
     	    free(new_job->packet);
     	    free(new_job);
             break;
-				/*sscanf(man_msg, "%d %s", &dst, name);
-				new_job = (struct host_job *) 
-						malloc(sizeof(struct host_job));
-				new_job->type = JOB_FILE_UPLOAD_SEND;
-				new_job->file_upload_dst = dst;	
-				for (i=0; name[i] != '\0'; i++) {
-					new_job->fname_upload[i] = name[i];
-				}
-				new_job->fname_upload[i] = '\0';
-				job_q_add(&job_q, new_job);*/
 		}
 	}
 
