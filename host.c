@@ -663,6 +663,7 @@ while(1) {
 				new_job->packet->payload, 
 				new_job->packet->length);
 
+            printf("\nPacket payload upload start: %s\n", new_job->packet->payload);
 			free(new_job->packet);
 			free(new_job);
 			break;
@@ -679,6 +680,7 @@ while(1) {
 				new_job->packet->payload,
 				new_job->packet->length);
 
+            printf("\nPacket payload uploading: %s\n", new_job->packet->payload);
 			free(new_job->packet);
 			free(new_job);
 			break;
@@ -720,7 +722,7 @@ while(1) {
 					fclose(fp);
 				}	
 			}
-			
+            printf("\nPacket payload end of file upload: %s\n", new_job->packet->payload);
 			free(new_job->packet);
 			free(new_job);
 			break;
@@ -730,6 +732,7 @@ while(1) {
     	 * Formats the filename packet given from the requesting host
     	 * such that the upload job type can be used to do a download. 
     	 */
+            printf("\nDownload Request Packet payload: %s\n", new_job->packet->payload);
             new_job2 = (struct host_job *)
     	        malloc(sizeof(struct host_job));
     	    
