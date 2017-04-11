@@ -35,7 +35,7 @@ struct packet *in_packet;
 struct packet *new_packet;
 
 struct net_port *p;
-struct host_job *new_job;
+struct host_job *new_job, *new_job1;
 
 struct job_queue job_q;
 int n;
@@ -89,7 +89,6 @@ while(1) {
 			new_job = (struct host_job *) malloc(sizeof(struct host_job));
 			new_job->in_port_index = i;
 			new_job->packet = in_packet;
-			
 			job_q_add(&job_q, new_job);
 			free(new_job);
 			free(in_packet);
@@ -99,20 +98,18 @@ while(1) {
 		if (job_q_num(&job_q) > 0) {
 			new_entry = '1';
 			entry_exists = '0';
-			new_packet = (struct packet *)malloc(sizeof(struct packet));
-			new_job = job_q_remove(&job_q);
-			new_packet = new_job->packet;
+			new_job1 = job_q_remove(&job_q);
 			/*
 			 * Check if entry exists in forwarding table 
 			 */
 				for (int j = 0; j < node_port_num; j++) {
-					if ((forwarding_table[j].valid == 1) && (new_packet->dst == forwarding_table[j].dst_host_id )) {
+					if ((forwarding_table[j].valid == 1) && (new_job1->packet->dst == forwarding_table[j].dst_host_id )) {
 						new_entry = '0';
 
 						//Send packet to correct port
-						packet_send(node_port[forwarding_table[j].port], new_packet);
+						packet_send(node_port[forwarding_table[j].port],new_job1->packet);
 					}
-					if ((forwarding_table[j].valid == 1) && (forwarding_table[j].dst_host_id == (int)new_packet->src)) {
+					if ((forwarding_table[j].valid == 1) && (forwarding_table[j].dst_host_id == (int)new_job1->packet->src)) {
 						entry_exists = '1';
 					}
 				}
@@ -122,8 +119,8 @@ while(1) {
 				for (int j = 0; j < node_port_num; j++) {
 					if ((forwarding_table[j].valid == 0) && (entry_exists == '0')) {
 						forwarding_table[j].valid = 1;
-						forwarding_table[j].dst_host_id = (int)new_packet->src;
-						forwarding_table[j].port = (int)new_job->in_port_index; //node port number
+						forwarding_table[j].dst_host_id = (int)new_job1->packet->src;
+						forwarding_table[j].port = (int)new_job1->in_port_index; //node port number
 						break;
 					}
 				}
@@ -132,21 +129,20 @@ while(1) {
 					 * Should it send only on unknown ports?
 					 **/
 					for (int j = 0; j < node_port_num; j++) {
-						if (j != new_job->in_port_index)  {
+						if (j != new_job1->in_port_index)  {
 							printf("Sending on port %d...\n", j);
-							packet_send(node_port[j], new_packet);
+							packet_send(node_port[j], new_job1->packet);
 						}
 					}	
 				}
-				printf("---------------------------------------\n");
-				printf("Valid\t");
-				printf("Destination (Host ID)\t");
-				printf("Port #\t\n");
-				for (int j = 0; j < node_port_num; j++) {
-					printf("%d\t%d\t\t\t%d\n", forwarding_table[j].valid, forwarding_table[j].dst_host_id, forwarding_table[j].port);
-				}
-				printf("---------------------------------------\n");
-				free(new_packet);
+				//printf("---------------------------------------\n");
+				//printf("Valid\t");
+				//printf("Destination (Host ID)\t");
+				//printf("Port #\t\n");
+				//for (int j = 0; j < node_port_num; j++) {
+				//	printf("%d\t%d\t\t\t%d\n", forwarding_table[j].valid, forwarding_table[j].dst_host_id, forwarding_table[j].port);
+				//}
+				//printf("---------------------------------------\n");
 		}
 		/* Sleep for 10 ms */
 		usleep(TENMILLISEC);

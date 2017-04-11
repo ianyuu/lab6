@@ -387,7 +387,6 @@ while(1) {
 		n = packet_recv(node_port[k], in_packet);
 
 		if ((n > 0) && ((int) in_packet->dst == host_id)) {
-		printf("RECV at host %d\n",host_id);
 			new_job = (struct host_job *) 
 				malloc(sizeof(struct host_job));
 			new_job->in_port_index = k;
@@ -736,14 +735,12 @@ while(1) {
     	    
     	    new_job2->type = JOB_FILE_UPLOAD_SEND;
             new_job2->file_upload_dst = new_job->packet->src;
-    	    printf("Upload to DST %d\n",new_job2->file_upload_dst);
 
             for(i=0; new_job->packet->payload[i] != '\0'; i++) {
     	        new_job2->fname_upload[i] = new_job->packet->payload[i]; 
             }
     	    new_job2->fname_upload[i] = '\0';
     	    
-    	    printf("File name: %s\n",new_job2->fname_upload);
     	    
     	    job_q_add(&job_q, new_job2);
     	    free(new_job->packet);
