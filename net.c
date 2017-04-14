@@ -445,7 +445,7 @@ int node_id;
 	 * private global variables.
 	 */
 fscanf(fp, "%d", &node_num);
-printf("Number of Nodes = %d: \n", node_num);
+printf("Number of Nodes = %d \n", node_num);
 g_net_node_num = node_num;
 
 if (node_num < 1) { 
@@ -458,9 +458,14 @@ else {
 	for (i=0; i<node_num; i++) { 
 		fscanf(fp, " %c ", &node_type);
 
-		if (node_type = 'H') {
+		if (node_type == 'H') {
 			fscanf(fp, " %d ", &node_id);
 			g_net_node[i].type = HOST;
+			g_net_node[i].id = node_id;
+		}
+		else if (node_type == 'S') {
+			fscanf(fp, " %d ", &node_id);
+			g_net_node[i].type = SWITCH;
 			g_net_node[i].id = node_id;
 		}
 		else {
@@ -506,6 +511,9 @@ else {
 			g_net_link[i].pipe_node0 = node0;
 			g_net_link[i].pipe_node1 = node1;
 		}
+		else if (link_type == 'S') {
+			/* Setup socket stuff */
+		}
 		else {
 			printf("   net.c: Unidentified link type\n");
 		}
@@ -520,7 +528,7 @@ for (i=0; i<g_net_node_num; i++) {
 	        printf("   Node %d HOST\n", g_net_node[i].id);
 	}
 	else if (g_net_node[i].type == SWITCH) {
-		printf(" SWITCH\n");
+		printf("   Node %d SWITCH\n", g_net_node[i].id);
 	}
 	else {
 		printf(" Unknown Type\n");
