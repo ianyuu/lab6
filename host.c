@@ -346,7 +346,6 @@ while(1) {
 				break;
 				
 			case 'd': /* Download a file from another host */
-			    printf("HELLO");
 				sscanf(man_msg, "%d %s", &dst, name);
 				
 			   /* Send file name to host that has the requested file */ 
@@ -664,6 +663,7 @@ while(1) {
 				new_job->packet->payload, 
 				new_job->packet->length);
 
+            printf("\nPacket payload upload start: %s\n", new_job->packet->payload);
 			free(new_job->packet);
 			free(new_job);
 			break;
@@ -680,6 +680,7 @@ while(1) {
 				new_job->packet->payload,
 				new_job->packet->length);
 
+            printf("\nPacket payload uploading: %s\n", new_job->packet->payload);
 			free(new_job->packet);
 			free(new_job);
 			break;
@@ -721,7 +722,7 @@ while(1) {
 					fclose(fp);
 				}	
 			}
-			
+            printf("\nPacket payload end of file upload: %s\n", new_job->packet->payload);
 			free(new_job->packet);
 			free(new_job);
 			break;
@@ -731,17 +732,18 @@ while(1) {
     	 * Formats the filename packet given from the requesting host
     	 * such that the upload job type can be used to do a download. 
     	 */
+            printf("\nDownload Request Packet payload: %s\n", new_job->packet->payload);
             new_job2 = (struct host_job *)
     	        malloc(sizeof(struct host_job));
     	    
     	    new_job2->type = JOB_FILE_UPLOAD_SEND;
             new_job2->file_upload_dst = new_job->packet->src;
-    	    
+
             for(i=0; new_job->packet->payload[i] != '\0'; i++) {
     	        new_job2->fname_upload[i] = new_job->packet->payload[i]; 
             }
     	    new_job2->fname_upload[i] = '\0';
-    	    
+    	    printf("File name: %s\n", new_job2->fname_upload);
     	    
     	    job_q_add(&job_q, new_job2);
     	    free(new_job->packet);
