@@ -453,7 +453,11 @@ while(1) {
 						= JOB_FILE_DOWNLOAD_REQ;
 					job_q_add(&job_q, new_job);
 					break;
+				/*
+				 * Tree packets.
+				 */
 				
+				case (char) PKT_CONTROL_SEND:
 				default:
 					free(in_packet);
 					free(new_job);
