@@ -1,3 +1,5 @@
 *.o
 *.swp
 net367
+TestDir*/*
+
