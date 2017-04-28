@@ -203,6 +203,7 @@ int n;
 int host_id;
 char name[NAME_LENGTH];
 char msg[NAME_LENGTH];
+char reply[MAN_MSG_LENGTH];
 
 printf("Enter file name to upload: ");
 scanf("%s", name);
@@ -212,6 +213,15 @@ printf("\n");
 
 n = sprintf(msg, "u %d %s", host_id, name);
 write(curr_host->send_fd, msg, n);
+
+n=0;
+while(n<=0) {
+	usleep(TENMILLISEC);
+	n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
+}
+reply[n] = '\0';
+printf("%s\n", reply);
+
 usleep(TENMILLISEC);
 }
 
@@ -232,7 +242,8 @@ usleep(TENMILLISEC);
 		int host_id;
 		char name[NAME_LENGTH];
 		char msg[NAME_LENGTH];
-		
+		char reply[NAME_LENGTH];
+	
 		printf("Enter file name to be requested: ");
 		scanf("%s", name);
 		printf("Enter host id to be requested for file: ");
@@ -241,6 +252,14 @@ usleep(TENMILLISEC);
 		
 		n = sprintf(msg, "d %d %s", host_id, name);
 		write(curr_host->send_fd, msg, n);
+		
+		n=0;
+		while(n<=0) {
+			usleep(TENMILLISEC);
+			n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
+		}
+		reply[n] = '\0';
+		printf("%s\n", reply);
 		usleep(TENMILLISEC);
 	}
 

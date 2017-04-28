@@ -44,8 +44,8 @@ struct net_link {
 	int pipe_node0;
 	int pipe_node1;
 		int socket_node0;
-		char[MAX_FILE_NAME] socket_domain0;
-		char[MAX_FILE_NAME] socket_domain1;
+		char socket_domain0[MAX_FILE_NAME];
+		char socket_domain1[MAX_FILE_NAME];
 		int socket_tcp0;
 		int scoket_tcp1;
 };
@@ -414,8 +414,31 @@ for (i=0; i<g_net_link_num; i++) {
 		g_port_list = p0;
 
 	}
-}
+/*	else if(g_net_link[i].type == SOCKET) {
+		// i think I'm just supposed to store the socket file descroptors
+		// the socket file descriptors will be used in nodes
+		// to set up listiners
+	
+		int sockfd;
+		int rv;
+		char s[INET6_ADDRSTRLEN];
+		struct addrinfo hints, * servinfo, *p;
 
+		//initialize var to set up socket
+		memset(&hints, 0, sizeof hints);
+		hints.ai_family = AF_UNSPEC;
+		hints_ai_socktype = SOCK_STREAM;
+		hints_at_flags = AI_PASSIVE;
+
+		rv = getaddrinfo(get_net_link[i].socket_domain0, PORT, &hints, &servinfo);
+		p = servinfo;
+
+		//get file descriptor for socket
+		sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+
+		//send 
+	}*/
+}
 }
 
 /*
@@ -516,7 +539,7 @@ else {
 			g_net_link[i].pipe_node0 = node0;
 			g_net_link[i].pipe_node1 = node1;
 		}
-		else if (link_type == 'S') {	//if the link type is a socket:
+/*		else if (link_type == 'S') {	//if the link type is a socket:
 		//format:(node#) (domain_node) (tcp_node) (domain_other) (tcp_other)
 			char[MAX_FILE_NAME] domain0;
 			char[MAX_FILE_NAME] domain1;
@@ -528,14 +551,12 @@ else {
 				&domain1,
 				&tcp1);
 			g_net_link[i].type = SOCKET;
-			g_net_linke[i].socket_node0 = node0;
+			g_net_link[i].socket_node0 = node0;
 			g_net_link[i].socket_domain0 = domain0;
 			g_net_link[i].socket_tcp0 = tcp0;
 			g_net_link[i].socket_domain1 = domain1;	
-		}
-		else if (link_type == 'S') {
-			/* Setup socket stuff */
-		}
+			g_net_link[i].socket_tcp1 = tcp1;
+		}*/
 		else {
 			printf("   net.c: Unidentified link type\n");
 		}
@@ -563,9 +584,15 @@ for (i=0; i<g_net_link_num; i++) {
 				g_net_link[i].pipe_node0, 
 				g_net_link[i].pipe_node1);
 	}
-	else if (g_net_link[i].type == SOCKET) {
-		printf("   Socket: to be constructed (net.c)\n");
-	}
+/*	else if (g_net_link[i].type == SOCKET) {
+		printf("   Link (%d %s %d %s %d) SOCKET\n",
+			g_net_link[i].socket_node0 = node0,
+			g_net_link[i].socket_domain0 = domain0,
+			g_net_link[i].socket_tcp0 = tcp0,
+			g_net_link[i].socket_domain1 = domain1,	
+			g_net_link[i].socket_tcp1 = tcp1);
+
+	}*/
 }
 
 fclose(fp);

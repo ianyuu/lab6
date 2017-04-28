@@ -43,8 +43,9 @@ struct packet { /* struct for a packet */
 #define PKT_PING_REQ		0
 #define PKT_PING_REPLY		1
 #define PKT_FILE_UPLOAD_START	2
-#define PKT_FILE_UPLOAD_CONT 3
+#define PKT_FILE_UPLOAD_CONT	3
 #define PKT_FILE_UPLOAD_END	4
-#define PKT_FILE_DOWNLOAD_REQ 5
-
-
+#define PKT_FILE_DOWNLOAD_REQ 	5
+#define PKT_PING_DOWNLOAD	6
+#define PKT_FILE_DOWNLOAD_CONT	7
+#define PKT_FILE_DOWNLOAD_END	8
