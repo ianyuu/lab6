@@ -45,7 +45,7 @@ struct net_link {
 	int pipe_node1;
 		int socket_node0;
 		char socket_domain0[MAX_FILE_NAME];
-		char socket_domain1[MAX_FILE_NAME];
+		char socket_domain1[MAX_FILE_NAME]; 
 		int socket_tcp0;
 		int scoket_tcp1;
 };
@@ -539,10 +539,10 @@ else {
 			g_net_link[i].pipe_node0 = node0;
 			g_net_link[i].pipe_node1 = node1;
 		}
-/*		else if (link_type == 'S') {	//if the link type is a socket:
+		else if (link_type == 'S') {	//if the link type is a socket:
 		//format:(node#) (domain_node) (tcp_node) (domain_other) (tcp_other)
-			char[MAX_FILE_NAME] domain0;
-			char[MAX_FILE_NAME] domain1;
+			char domain0[MAX_FILE_NAME];
+			char domain1[MAX_FILE_NAME];
 			int tcp0, tcp1;
 			fscanf(fp," %d %s %d %s %d",
 				&node0,
@@ -552,11 +552,13 @@ else {
 				&tcp1);
 			g_net_link[i].type = SOCKET;
 			g_net_link[i].socket_node0 = node0;
-			g_net_link[i].socket_domain0 = domain0;
+			strcpy(g_net_link[i].socket_domain0, domain0);
 			g_net_link[i].socket_tcp0 = tcp0;
-			g_net_link[i].socket_domain1 = domain1;	
-			g_net_link[i].socket_tcp1 = tcp1;
-		}*/
+			strcpy(g_net_link[i].socket_domain1, domain1);
+		}
+		else if (link_type == 'S') {
+			/* Setup socket stuff */
+		}	
 		else {
 			printf("   net.c: Unidentified link type\n");
 		}
