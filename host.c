@@ -239,6 +239,7 @@ FILE *fp;
 
 struct packet *in_packet; /* Incoming packet */
 struct packet *new_packet;
+struct packet *control_packet;
 
 struct net_port *p;
 struct host_job *new_job;
@@ -284,6 +285,10 @@ for (k = 0; k < node_port_num; k++) {
 /* Initialize the job queue */
 job_q_init(&job_q);
 
+/* Initialize Tree variables */
+int control_counter = 0;
+int localRootID = host_id;
+int localRootDist = 0;
 while(1) {
 	/* Execute command from manager, if any */
 
@@ -398,7 +403,7 @@ while(1) {
 
 		in_packet = (struct packet *) malloc(sizeof(struct packet));
 		n = packet_recv(node_port[k], in_packet);
-
+		
 		if ((n > 0) && ((int) in_packet->dst == host_id)) {
 			new_job = (struct host_job *) 
 				malloc(sizeof(struct host_job));
@@ -485,6 +490,24 @@ while(1) {
 			}
 		}
 		else {
+			control_packet = (struct packet *) malloc(sizeof(struct packet));
+			if (control_counter >= 10) {
+				/*
+				 * Build and send control pcaket
+				 */
+				 for (i = 0; i < node_port_num; i++) {
+				 	control_packet->src = host_id;
+				 	control_packet->dst = -1;
+				 	control_packet->type = PKT_CONTROL;
+				 	control_packet->length = 4;
+					control_packet->payload[0] = localRootID + '0';
+					control_packet->payload[1] = localRootDist + '0';
+					control_packet->payload[2] = 'H';
+					control_packet->payload[3] = 'Y';
+				 }
+				 packet_send(node_port[i], control_packet);
+			}
+			free(control_packet);
 			free(in_packet);
 		}
 	}
@@ -894,7 +917,7 @@ while(1) {
 	
 		}
 	}
-
+	control_counter++;
 	/* The host goes to sleep for 10 ms */
 	usleep(TENMILLISEC);
 

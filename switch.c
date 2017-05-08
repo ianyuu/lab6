@@ -172,7 +172,7 @@ void switch_main(int switch_id) {
 						/* Sends packet on all ports */
 						else {
 							for (j = 0; j < node_port_num; j++) {
-								if (j != new_job->in_port_index)  {
+								if ((j != new_job->in_port_index) && (localPortTree[j] == 'Y'))  {
 									//printf("Sending on port %d...\n", j);
 									packet_send(node_port[j], new_job->packet);
 								}
