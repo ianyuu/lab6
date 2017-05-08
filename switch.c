@@ -86,29 +86,18 @@ void switch_main(int switch_id) {
 		/* Scan all Ports */
 		for (i = 0; i < node_port_num; i++) { 
 			in_packet = (struct packet *) malloc(sizeof(struct packet));
-			new_job = (struct host_job *) malloc(sizeof(struct host_job));
 			n = packet_recv(node_port[i], in_packet);	
 			
 			/* If switch receives packet, create new job */
 			if (n > 0) {
+				printf("received packet at switch\n");
+				new_job = (struct host_job *) malloc(sizeof(struct host_job));
 				new_job->in_port_index = i;
 				new_job->packet = in_packet;
 				job_q_add(&job_q, new_job);
 			}
-			else {
-				if (control_counter >= 10) {
-					new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
-					new_job2->type = JOB_SEND_CONTROL_PKT;
-					new_job2->packet = control_packet;
-					
-					job_q_add(&job_q, new_job2);
-					control_counter = 0;
-					free(new_job2);
-					free(control_packet);
-				}
-				free(new_job);
-				free(in_packet);
-			}
+			free(new_job);
+			free(in_packet);
 		}
 			/* Execute one job from queue */
 			if (job_q_num(&job_q) > 0) {
@@ -116,6 +105,7 @@ void switch_main(int switch_id) {
 				new_job = job_q_remove(&job_q);
 				in_packet = new_job->packet;
 				/* Update localRootID, localRootDist, and localParent */
+				printf("in_packet->type = %c\n", in_packet->type);
 				if (in_packet->type == (char) PKT_CONTROL) {
 					if (in_packet->payload[6] == 'S') {
 						if((int) in_packet->payload[4] < localRootID) { // Found a better root
@@ -147,7 +137,7 @@ void switch_main(int switch_id) {
 				}
 				else if (new_job->type == JOB_SEND_CONTROL_PKT) {
 					/*
-					 * Builds control packet
+					 * Builds and sends control packet
 					 */
 						for (i = 0; i < node_port_num; i++) {
 							control_packet = (struct packet *) malloc(sizeof(struct packet));	
@@ -167,7 +157,7 @@ void switch_main(int switch_id) {
 							packet_send(node_port[i], control_packet);
 						}
 				}
-				else {
+				else{
 					/*
 					 * Check if entry exists in forwarding table 
 					 */
@@ -197,16 +187,23 @@ void switch_main(int switch_id) {
 								}
 							}
 						}
-						//printf("---------------------------------------\n");
-						//printf("Valid\t");
-						//printf("Destination (Host ID)\t");
-						//printf("Port #\t\n");
-						//for (n = 0; n < node_port_num; n++) {
-						//	printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
-						//}
-						//printf("---------------------------------------\n");
+						printf("---------------------------------------\n");
+						printf("Valid\t");
+						printf("Destination (Host ID)\t");
+						printf("Port #\t\n");
+						for (n = 0; n < node_port_num; n++) {
+							printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
+						}
+						printf("---------------------------------------\n");
 				}
 			}
+			if (control_counter >= 10) {
+				new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+				new_job2->type = JOB_SEND_CONTROL_PKT;
+				job_q_add(&job_q, new_job2);
+				control_counter = 0;
+			}
+
 			control_counter++;
 			/* Sleep for 10 ms */
 			usleep(TENMILLISEC);

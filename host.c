@@ -207,6 +207,7 @@ int job_q_num(struct job_queue *j_q)
 return j_q->occ;
 }
 
+
 /*
  *  Main 
  */
@@ -239,6 +240,7 @@ FILE *fp;
 
 struct packet *in_packet; /* Incoming packet */
 struct packet *new_packet;
+struct packet *control_packet;
 
 struct net_port *p;
 struct host_job *new_job;
@@ -284,6 +286,12 @@ for (k = 0; k < node_port_num; k++) {
 /* Initialize the job queue */
 job_q_init(&job_q);
 
+/* Initialize Tree Variables */
+int localRootID = host_id;
+int localRootDist = 0;
+int localParent = -1;
+char localPortTree[node_port_num];
+int control_counter = 0;
 while(1) {
 	/* Execute command from manager, if any */
 
@@ -398,7 +406,13 @@ while(1) {
 
 		in_packet = (struct packet *) malloc(sizeof(struct packet));
 		n = packet_recv(node_port[k], in_packet);
-
+		if ((n > 0) && (in_packet->type == (char) PKT_CONTROL)) {
+			if (in_packet->payload[6] == 'S') {
+				localPortTree[k] = 'Y';
+			}
+			else localPortTree[k] = 'N';
+			free(in_packet);
+		}
 		if ((n > 0) && ((int) in_packet->dst == host_id)) {
 			new_job = (struct host_job *) 
 				malloc(sizeof(struct host_job));
@@ -505,7 +519,9 @@ while(1) {
 		/* Send packets on all ports */	
 		case JOB_SEND_PKT_ALL_PORTS:
 			for (k=0; k<node_port_num; k++) {
-				packet_send(node_port[k], new_job->packet);
+				if (localPortTree[k] == 'Y') {
+					packet_send(node_port[k], new_job->packet);
+				}
 			}
 			free(new_job->packet);
 			free(new_job);
@@ -891,10 +907,32 @@ while(1) {
 		}
 
 		break;
-	
+
+	    case JOB_SEND_CONTROL_PKT:
+			for (i = 0; i < node_port_num; i++) {
+				control_packet->src = -1;
+				control_packet->dst = -1;
+				control_packet->type = PKT_CONTROL;
+				control_packet->length = 4;
+				control_packet->payload[4] = localRootID;
+				control_packet->payload[5] = localRootDist;
+				control_packet->payload[6] = 'H';
+				control_packet->payload[7] = 'Y';
+				packet_send(node_port[i], control_packet);
+			}
 		}
 	}
-
+	if (control_counter >= 10) {
+		control_packet = (struct packet *) malloc(sizeof(struct packet));		    	
+		new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+		new_job2->type = JOB_SEND_CONTROL_PKT;
+		new_job2->packet = control_packet;
+		job_q_add(&job_q, new_job2);
+		control_counter = 0;
+		free(new_job2);
+		free(control_packet);
+	}
+	control_counter++;
 	/* The host goes to sleep for 10 ms */
 	usleep(TENMILLISEC);
 
