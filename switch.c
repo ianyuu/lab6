@@ -115,7 +115,7 @@ void switch_main(int switch_id) {
 						else {
 							control_packet->payload[3] = 'N';
 						}
-						printf("Control Packet Payload: %s\n", control_packet->payload);
+						//printf("Control Packet Payload: %s\n", control_packet->payload);
 						packet_send(node_port[k], control_packet);
 					}
 					control_counter = 0;
