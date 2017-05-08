@@ -76,7 +76,7 @@ void switch_main(int switch_id) {
 	char localPortTree[node_port_num];
 	localRootID = switch_id;
 	localRootDist = 0;
-	localParent = -1;
+	localParent = 0;
 
 	while(1) {
 	/*
@@ -96,15 +96,29 @@ void switch_main(int switch_id) {
 				job_q_add(&job_q, new_job);
 			}
 			else {
+				control_packet = (struct packet *) malloc(sizeof(struct packet));
 				if (control_counter >= 10) {
-					new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
-					new_job2->type = JOB_SEND_CONTROL_PKT;
-					new_job2->packet = control_packet;
-					
-					job_q_add(&job_q, new_job2);
+				/*
+				 * Builds control packet
+				 */
+					for (k = 0; k < node_port_num; k++) {
+						control_packet->src =  switch_id;
+						control_packet->dst =  0;
+						control_packet->type = PKT_CONTROL; 
+						control_packet->length = 4;
+						control_packet->payload[0] = localRootID + '0';
+						control_packet->payload[1] = localRootDist + '0';
+						control_packet->payload[2] = 'S';
+						if (i == localParent) {
+							control_packet->payload[3] = 'Y'; 
+						}
+						else {
+							control_packet->payload[3] = 'N';
+						}
+						printf("Control Packet Payload: %s\n", control_packet->payload);
+						packet_send(node_port[k], control_packet);
+					}
 					control_counter = 0;
-					free(new_job2);
-					free(control_packet);
 				}
 				free(new_job);
 				free(in_packet);
@@ -117,55 +131,35 @@ void switch_main(int switch_id) {
 				in_packet = new_job->packet;
 				/* Update localRootID, localRootDist, and localParent */
 				if (in_packet->type == (char) PKT_CONTROL) {
-					if (in_packet->payload[6] == 'S') {
-						if((int) in_packet->payload[4] < localRootID) { // Found a better root
-							localRootID = (int) in_packet->payload[4]; // Node becomes the child of the neighbor at port k
+					int payloadRoot = in_packet->payload[0] - '0';
+					int payloadDist = in_packet->payload[1] - '0';
+					if (in_packet->payload[2] == 'S') {
+						if(payloadRoot < localRootID) { // Found a better root
+							localRootID = payloadRoot; // Node becomes the child of the neighbor at port k
 							localParent = i;
-							localRootDist = (int) in_packet->payload[5] + 1; // New distance = neighbor disance + one hop to neighbor
+							localRootDist = payloadDist + 1; // New distance = neighbor disance + one hop to neighbor
 						}
-						else if ((int) in_packet->payload[4] == localRootID) { // The root is the same
-							if (localRootDist > (int) in_packet->payload[5]+1) { // Found a better path to the root
+						else if (payloadRoot == localRootID) { // The root is the same
+							if (localRootDist > payloadDist+1) { // Found a better path to the root
 								localParent = i;
-								localRootDist = (int) in_packet->payload[5] + 1; // New distance = Neighbor dit + one hop to neighbor
+								localRootDist = payloadDist + 1; // New distance = Neighbor dit + one hop to neighbor
 							}
 						}
 					}
 					/* Update status of local port, whether it is in the tree or not */
-					if (in_packet->payload[6] == 'H') { // Port is attached to the parent so its part of tree
+					if (in_packet->payload[2] == 'H') { // Port is attached to the parent so its part of tree
 						localPortTree[i] = 'Y';
 					}
-					else if (in_packet->payload[6] == 'S') {
+					else if (in_packet->payload[2] == 'S') {
 						if (localParent == i) {
 							localPortTree[i] = 'Y';
 						}
-						else if (in_packet->payload[7] == 'Y') { // Port is attached to child, part of tree
+						else if (in_packet->payload[3] == 'Y') { // Port is attached to child, part of tree
 							localPortTree[i] = 'Y';
 						}
 						else localPortTree[i] = 'N';
 					}
 					else localPortTree[i] = 'N';
-				}
-				else if (new_job->type == JOB_SEND_CONTROL_PKT) {
-					/*
-					 * Builds control packet
-					 */
-						for (i = 0; i < node_port_num; i++) {
-							control_packet = (struct packet *) malloc(sizeof(struct packet));	
-							control_packet->src = -1;
-							control_packet->dst = -1;
-							control_packet->type = PKT_CONTROL; 
-							control_packet->length = 4;
-							control_packet->payload[4] = localRootID;
-							control_packet->payload[5] = localRootDist;
-							control_packet->payload[6] = 'S';
-							if (i == localParent) {
-								control_packet->payload[7] = 'Y'; 
-							}
-							else {
-								control_packet->payload[7] = 'N';
-							}
-							packet_send(node_port[i], control_packet);
-						}
 				}
 				else {
 					/*
@@ -179,7 +173,7 @@ void switch_main(int switch_id) {
 						else {
 							for (j = 0; j < node_port_num; j++) {
 								if (j != new_job->in_port_index)  {
-									printf("Sending on port %d...\n", j);
+									//printf("Sending on port %d...\n", j);
 									packet_send(node_port[j], new_job->packet);
 								}
 							}	
@@ -207,6 +201,7 @@ void switch_main(int switch_id) {
 						//printf("---------------------------------------\n");
 				}
 			}
+			free(control_packet);
 			control_counter++;
 			/* Sleep for 10 ms */
 			usleep(TENMILLISEC);
@@ -221,7 +216,7 @@ int containsEntry(switch_forwarding_table forwarding_table[], char dst, int numb
 		if((forwarding_table[i].valid == 1) && (forwarding_table[i].dst_switch_id == dst)) {
 			return i;
 		}
-		printf("Could not find entry in table\n");
+		//printf("Could not find entry in table\n");
 		return -1;
 	}
 }
