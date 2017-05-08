@@ -94,18 +94,7 @@ void switch_main(int switch_id) {
 				new_job = (struct host_job *) malloc(sizeof(struct host_job));
 				new_job->in_port_index = i;
 				new_job->packet = in_packet;
-				job_q_add(&job_q, new_job);
-			}
-			free(new_job);
-			free(in_packet);
-		}
-			/* Execute one job from queue */
-			if (job_q_num(&job_q) > 0) {
-				entry_id = -1;
-				new_job = job_q_remove(&job_q);
-				in_packet = new_job->packet;
-				/* Update localRootID, localRootDist, and localParent */
-				printf("in_packet->type = %c\n", in_packet->type);
+
 				if (in_packet->type == (char) PKT_CONTROL) {
 					if (in_packet->payload[6] == 'S') {
 						if((int) in_packet->payload[4] < localRootID) { // Found a better root
@@ -134,8 +123,27 @@ void switch_main(int switch_id) {
 						else localPortTree[i] = 'N';
 					}
 					else localPortTree[i] = 'N';
+					free(in_packet);
 				}
-				else if (new_job->type == JOB_SEND_CONTROL_PKT) {
+				job_q_add(&job_q, new_job);
+			}
+			else {
+				if (control_counter >= 10) {
+					new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+					new_job2->type = JOB_SEND_CONTROL_PKT;
+					job_q_add(&job_q, new_job2);
+					control_counter = 0;
+				}
+			}
+		}
+			/* Execute one job from queue */
+			if (job_q_num(&job_q) > 0) {
+				entry_id = -1;
+				new_job = job_q_remove(&job_q);
+				in_packet = new_job->packet;
+				/* Update localRootID, localRootDist, and localParent */
+				printf("in_packet->type = %c\n", in_packet->type);
+				if (new_job->type == JOB_SEND_CONTROL_PKT) {
 					/*
 					 * Builds and sends control packet
 					 */
@@ -163,12 +171,14 @@ void switch_main(int switch_id) {
 					 */
 						entry_id = containsEntry(forwarding_table, new_job->packet->dst, node_port_num);
 						if (entry_id != -1) {
-							packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
+							if(localPortTree[i] == 'Y') {
+								packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
+							}
 						}
 						/* Sends packet on all ports */
 						else {
 							for (j = 0; j < node_port_num; j++) {
-								if (j != new_job->in_port_index)  {
+								if ((j != new_job->in_port_index) && (localPortTree[i] == 'Y'))  {
 									printf("Sending on port %d...\n", j);
 									packet_send(node_port[j], new_job->packet);
 								}
@@ -197,13 +207,6 @@ void switch_main(int switch_id) {
 						printf("---------------------------------------\n");
 				}
 			}
-			if (control_counter >= 10) {
-				new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
-				new_job2->type = JOB_SEND_CONTROL_PKT;
-				job_q_add(&job_q, new_job2);
-				control_counter = 0;
-			}
-
 			control_counter++;
 			/* Sleep for 10 ms */
 			usleep(TENMILLISEC);
