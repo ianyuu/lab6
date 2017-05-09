@@ -19,7 +19,7 @@
 #include "switch.h"
 
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
-
+#define PORTMAX	100
 
 
 void switch_main(int switch_id) {
@@ -65,8 +65,8 @@ void switch_main(int switch_id) {
 	job_q_init(&job_q);
 	
 	/* Initialize Forwarding Table */
-	switch_forwarding_table forwarding_table[node_port_num];
-	for (i = 0; i < node_port_num; i++) {
+	switch_forwarding_table forwarding_table[PORTMAX];
+	for (i = 0; i < PORTMAX; i++) {
 		forwarding_table[i].valid = 0;
 		forwarding_table[i].dst_switch_id = 0;
 		forwarding_table[i].port = 0;
@@ -76,7 +76,7 @@ void switch_main(int switch_id) {
 	char localPortTree[node_port_num];
 	localRootID = switch_id;
 	localRootDist = 0;
-	localParent = 0;
+	localParent = -1;
 
 	for (int i = 0; i < node_port_num; i++) {
 		localPortTree[i] = 'N';
@@ -134,6 +134,7 @@ void switch_main(int switch_id) {
 				else {
 					localPortTree[i] = 'N';
 				}
+				printf("localPortTree[%d] = %c\n", i, localPortTree[i]);
 			}
 			else {
 				control_packet = (struct packet *) malloc(sizeof(struct packet));
@@ -143,7 +144,7 @@ void switch_main(int switch_id) {
 				 */
 					for (k = 0; k < node_port_num; k++) {
 						control_packet->src =  switch_id;
-						control_packet->dst =  0;
+						control_packet->dst =  -1;
 						control_packet->type = PKT_CONTROL; 
 						control_packet->length = 4;
 						control_packet->payload[0] = localRootID + '0';
@@ -193,7 +194,7 @@ void switch_main(int switch_id) {
 				 * Adds source packet to forwarding table.
 				 */
 					if (entry_id == -1) {
-						for (int k = 0; k < node_port_num; k++) {
+						for (int k = 0; k < PORTMAX; k++) {
 							if (forwarding_table[k].valid == 0) {
 								forwarding_table[k].valid = 1;
 								forwarding_table[k].dst_switch_id = (int)new_job->packet->src;
@@ -206,8 +207,10 @@ void switch_main(int switch_id) {
 					printf("Valid\t");
 					printf("Destination (Host ID)\t");
 					printf("Port #\t\n");
-					for (n = 0; n < node_port_num; n++) {
-						printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
+					for (n = 0; n < PORTMAX; n++) {
+						if(forwarding_table[n].valid) {
+							printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
+						}
 					}
 					printf("---------------------------------------\n");
 			}
