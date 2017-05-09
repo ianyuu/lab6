@@ -22,7 +22,7 @@
 #define MAX_FILE_NAME 100
 #define PKT_PAYLOAD_MAX 100
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
-
+#define MAXCOUNTERTIME 100
 /* Types of packets */
 
 struct file_buf {
@@ -489,8 +489,8 @@ while(1) {
 					free(new_job);
 			}
 		}
-		else if (control_counter >= 10) {
-			control_packet = (struct packet *) malloc(sizeof(struct packet));
+		else if (control_counter >= MAXCOUNTERTIME) {
+				control_packet = (struct packet *) malloc(sizeof(struct packet));
 				/*
 				 * Build and send control pcaket
 				 */
@@ -506,9 +506,10 @@ while(1) {
 				 	packet_send(node_port[i], control_packet);
 //				 	printf("Control Packet Payload: %s\n", control_packet->payload);
 				 }
+				 control_counter = 0;
+				 free(control_packet);
 		}
 		else {	
-			free(control_packet);
 			free(in_packet);
 		}
 

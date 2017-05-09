@@ -19,6 +19,7 @@
 #include "switch.h"
 
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
+#define MAXCOUNTERTIME 100
 #define PORTMAX	100
 
 
@@ -89,14 +90,15 @@ void switch_main(int switch_id) {
 		/* Scan all Ports */
 		for (i = 0; i < node_port_num; i++) { 
 			in_packet = (struct packet *) malloc(sizeof(struct packet));
-			new_job = (struct host_job *) malloc(sizeof(struct host_job));
 			n = packet_recv(node_port[i], in_packet);	
 			/* If switch receives non control-packet, create new job */
 			if ((n > 0) && (in_packet->type != PKT_CONTROL)) {
-				printf("adding to job queue\n");
+				new_job = (struct host_job *) malloc(sizeof(struct host_job));
+				//printf("adding to job queue\n");
 				new_job->in_port_index = i;
 				new_job->packet = in_packet;
 				job_q_add(&job_q, new_job);
+				free(new_job);
 			}
 			/* If switch receives control packet, update variables */
 			else if ((n > 0 ) && (in_packet->type == PKT_CONTROL)){
@@ -137,8 +139,8 @@ void switch_main(int switch_id) {
 //				printf("localPortTree[%d] = %c\n", i, localPortTree[i]);
 			}
 			else {
-				control_packet = (struct packet *) malloc(sizeof(struct packet));
-				if (control_counter >= 10) {
+				if (control_counter >= MAXCOUNTERTIME) {
+					control_packet = (struct packet *) malloc(sizeof(struct packet));
 				/*
 				 * Builds control packet
 				 */
@@ -160,35 +162,23 @@ void switch_main(int switch_id) {
 						packet_send(node_port[k], control_packet);
 					}
 					control_counter = 0;
+					free(control_packet);
 				}
-				free(new_job);
-				free(in_packet);
 			}
 		} // end for loop	
 
 		/* Execute one job from queue */
 		if (job_q_num(&job_q) > 0) {
 			entry_id = -1;
+			new_job = (struct host_job *) malloc(sizeof(struct host_job));
 			new_job = job_q_remove(&job_q);
 			in_packet = new_job->packet;
-			printf("executing non control job\n");
+//			printf("executing non control job\n");
+
 			/*
-			 * Check if entry exists in forwarding table 
+			 * Check if source exists in forwarding table 
 			 */
 				entry_id = containsEntry(forwarding_table, in_packet->src, PORTMAX);
-				if (entry_id != -1) {
-					packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
-				}
-				/* Sends packet on all ports */
-				else {
-					for (j = 0; j < node_port_num; j++) {
-						printf("localPortTree[%d] = %c\n", j, localPortTree[j]);
-						if ((j != new_job->in_port_index) && (localPortTree[j] == 'Y'))  {
-							printf("Sending on port %d...\n", j);
-							packet_send(node_port[j], new_job->packet);
-						}
-					}	
-				}
 			/*
 			 * Adds source packet to forwarding table.
 			 */
@@ -212,9 +202,26 @@ void switch_main(int switch_id) {
 					}
 				}
 				printf("---------------------------------------\n");
-			
+				
+				/* Check if destination is in table */
+				entry_id = containsEntry(forwarding_table, in_packet->dst, PORTMAX);
+
+				if (entry_id != -1) {
+					//printf("found entry in table\n");
+					packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
+				}
+				/* Sends packet on all ports */
+				else {
+					for (j = 0; j < node_port_num; j++) {
+//						printf("localPortTree[%d] = %c\n", j, localPortTree[j]);
+						if ((j != new_job->in_port_index) && (localPortTree[j] == 'Y'))  {
+							//printf("Sending on port %d...\n", j);
+							packet_send(node_port[j], new_job->packet);
+						}
+					}	
+				}
+		free(new_job);	
 		}
-		free(control_packet);
 		control_counter++;
 		/* Sleep for 10 ms */
 		usleep(TENMILLISEC);
