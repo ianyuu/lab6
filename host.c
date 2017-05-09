@@ -489,7 +489,7 @@ while(1) {
 					free(new_job);
 			}
 		}
-		else if (control_counter >= 100) {
+		else if (control_counter >= 10) {
 			control_packet = (struct packet *) malloc(sizeof(struct packet));
 				/*
 				 * Build and send control pcaket
@@ -504,6 +504,7 @@ while(1) {
 					control_packet->payload[2] = 'H';
 					control_packet->payload[3] = 'Y';
 				 	packet_send(node_port[i], control_packet);
+//				 	printf("Control Packet Payload: %s\n", control_packet->payload);
 				 }
 		}
 		else {	

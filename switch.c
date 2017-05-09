@@ -138,7 +138,7 @@ void switch_main(int switch_id) {
 			}
 			else {
 				control_packet = (struct packet *) malloc(sizeof(struct packet));
-				if (control_counter >= 100) {
+				if (control_counter >= 10) {
 				/*
 				 * Builds control packet
 				 */
