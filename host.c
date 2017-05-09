@@ -489,27 +489,28 @@ while(1) {
 					free(new_job);
 			}
 		}
-		else {
+		else if (control_counter >= 100) {
 			control_packet = (struct packet *) malloc(sizeof(struct packet));
-			if (control_counter >= 10) {
 				/*
 				 * Build and send control pcaket
 				 */
 				 for (i = 0; i < node_port_num; i++) {
 				 	control_packet->src = host_id;
-				 	control_packet->dst = -1;
+				 	control_packet->dst = 0;
 				 	control_packet->type = PKT_CONTROL;
 				 	control_packet->length = 4;
 					control_packet->payload[0] = localRootID + '0';
 					control_packet->payload[1] = localRootDist + '0';
 					control_packet->payload[2] = 'H';
 					control_packet->payload[3] = 'Y';
+				 	packet_send(node_port[i], control_packet);
 				 }
-				 packet_send(node_port[i], control_packet);
-			}
+		}
+		else {	
 			free(control_packet);
 			free(in_packet);
 		}
+
 	}
 
 	/*

@@ -78,6 +78,9 @@ void switch_main(int switch_id) {
 	localRootDist = 0;
 	localParent = 0;
 
+	for (int i = 0; i < node_port_num; i++) {
+		localPortTree[i] = 'N';
+	}
 	while(1) {
 	/*
 	 * Get packets from incoming ports and translate to jobs.
@@ -89,11 +92,48 @@ void switch_main(int switch_id) {
 			new_job = (struct host_job *) malloc(sizeof(struct host_job));
 			n = packet_recv(node_port[i], in_packet);	
 			
-			/* If switch receives packet, create new job */
-			if (n > 0) {
+			/* If switch receives non control-packet, create new job */
+			if ((n > 0) && (in_packet->type != PKT_CONTROL)) {
 				new_job->in_port_index = i;
 				new_job->packet = in_packet;
 				job_q_add(&job_q, new_job);
+			}
+			/* If switch receives control packet, update variables */
+			else if ((n > 0 ) && (in_packet->type == PKT_CONTROL)){
+				/* Update localRootID, localRootDist, and localParent */
+				int payloadRoot = in_packet->payload[0] - '0';
+				int payloadDist = in_packet->payload[1] - '0';
+				if (in_packet->payload[2] == 'S') {
+					if(payloadRoot < localRootID) { // Found a better root
+						localRootID = payloadRoot; // Node becomes the child of the neighbor at port k
+						localParent = i;
+						localRootDist = payloadDist + 1; // New distance = neighbor disance + one hop to neighbor
+					}
+					else if (payloadRoot == localRootID) { // The root is the same
+						if (localRootDist > payloadDist+1) { // Found a better path to the root
+							localParent = i;
+							localRootDist = payloadDist + 1; // New distance = Neighbor dit + one hop to neighbor
+						}
+					}
+				}
+				/* Update status of local port, whether it is in the tree or not */
+				if (in_packet->payload[2] == 'H') { // Port is attached to the parent so its part of tree
+					localPortTree[i] = 'Y';
+				}
+				else if (in_packet->payload[2] == 'S') {
+					if (localParent == i) {
+						localPortTree[i] = 'Y';
+					}
+					else if (in_packet->payload[3] == 'Y') { // Port is attached to child, part of tree
+						localPortTree[i] = 'Y';
+					}
+					else {
+						localPortTree[i] = 'N';
+					}
+				}
+				else {
+					localPortTree[i] = 'N';
+				}
 			}
 			else {
 				control_packet = (struct packet *) malloc(sizeof(struct packet));
@@ -123,90 +163,59 @@ void switch_main(int switch_id) {
 				free(new_job);
 				free(in_packet);
 			}
-		}
-			/* Execute one job from queue */
-			if (job_q_num(&job_q) > 0) {
-				entry_id = -1;
-				new_job = job_q_remove(&job_q);
-				in_packet = new_job->packet;
-				/* Update localRootID, localRootDist, and localParent */
-				if (in_packet->type == (char) PKT_CONTROL) {
-					int payloadRoot = in_packet->payload[0] - '0';
-					int payloadDist = in_packet->payload[1] - '0';
-					if (in_packet->payload[2] == 'S') {
-						if(payloadRoot < localRootID) { // Found a better root
-							localRootID = payloadRoot; // Node becomes the child of the neighbor at port k
-							localParent = i;
-							localRootDist = payloadDist + 1; // New distance = neighbor disance + one hop to neighbor
-						}
-						else if (payloadRoot == localRootID) { // The root is the same
-							if (localRootDist > payloadDist+1) { // Found a better path to the root
-								localParent = i;
-								localRootDist = payloadDist + 1; // New distance = Neighbor dit + one hop to neighbor
-							}
-						}
+		} // end for loop	
+
+		/* Execute one job from queue */
+		if (job_q_num(&job_q) > 0) {
+			entry_id = -1;
+			new_job = job_q_remove(&job_q);
+			in_packet = new_job->packet;
+			if (in_packet->type != PKT_CONTROL) {
+				printf("executing non control job\n");
+				/*
+				 * Check if entry exists in forwarding table 
+				 */
+					entry_id = containsEntry(forwarding_table, new_job->packet->dst, node_port_num);
+					if (entry_id != -1) {
+						packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
 					}
-					/* Update status of local port, whether it is in the tree or not */
-					if (in_packet->payload[2] == 'H') { // Port is attached to the parent so its part of tree
-						localPortTree[i] = 'Y';
-					}
-					else if (in_packet->payload[2] == 'S') {
-						if (localParent == i) {
-							localPortTree[i] = 'Y';
-						}
-						else if (in_packet->payload[3] == 'Y') { // Port is attached to child, part of tree
-							localPortTree[i] = 'Y';
-						}
-						else localPortTree[i] = 'N';
-					}
+					/* Sends packet on all ports */
 					else {
-						localPortTree[i] = 'N';
+						for (j = 0; j < node_port_num; j++) {
+							printf("localPortTree[%d] = %c\n", j, localPortTree[j]);
+							if ((j != new_job->in_port_index) && (localPortTree[j] == 'Y'))  {
+								printf("Sending on port %d...\n", j);
+								packet_send(node_port[j], new_job->packet);
+							}
+						}	
 					}
-				}
-				else {
-					/*
-					 * Check if entry exists in forwarding table 
-					 */
-						entry_id = containsEntry(forwarding_table, new_job->packet->dst, node_port_num);
-						if (entry_id != -1) {
-							packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
-						}
-						/* Sends packet on all ports */
-						else {
-							for (j = 0; j < node_port_num; j++) {
-								if ((j != new_job->in_port_index) && (localPortTree[j] == 'Y'))  {
-									//printf("Sending on port %d...\n", j);
-									packet_send(node_port[j], new_job->packet);
-								}
-							}	
-						}
-					/*
-					 * Adds source packet to forwarding table.
-					 */
-						if (entry_id == -1) {
-							for (int k = 0; k < node_port_num; k++) {
-								if (forwarding_table[k].valid == 0) {
-									forwarding_table[k].valid = 1;
-									forwarding_table[k].dst_switch_id = (int)new_job->packet->src;
-									forwarding_table[k].port = (int)new_job->in_port_index; //node port number
-									break;
-								}
+				/*
+				 * Adds source packet to forwarding table.
+				 */
+					if (entry_id == -1) {
+						for (int k = 0; k < node_port_num; k++) {
+							if (forwarding_table[k].valid == 0) {
+								forwarding_table[k].valid = 1;
+								forwarding_table[k].dst_switch_id = (int)new_job->packet->src;
+								forwarding_table[k].port = (int)new_job->in_port_index; //node port number
+								break;
 							}
 						}
-						//printf("---------------------------------------\n");
-						//printf("Valid\t");
-						//printf("Destination (Host ID)\t");
-						//printf("Port #\t\n");
-						//for (n = 0; n < node_port_num; n++) {
-						//	printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
-						//}
-						//printf("---------------------------------------\n");
-				}
+					}
+					printf("---------------------------------------\n");
+					printf("Valid\t");
+					printf("Destination (Host ID)\t");
+					printf("Port #\t\n");
+					for (n = 0; n < node_port_num; n++) {
+						printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
+					}
+					printf("---------------------------------------\n");
 			}
-			free(control_packet);
-			control_counter++;
-			/* Sleep for 10 ms */
-			usleep(TENMILLISEC);
+		}
+		free(control_packet);
+		control_counter++;
+		/* Sleep for 10 ms */
+		usleep(TENMILLISEC);
 	
 	
 	} /* End of while */
