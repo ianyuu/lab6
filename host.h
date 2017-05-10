@@ -1,7 +1,7 @@
 /* 
  * host.h 
  */
-
+#define MAXCOUNTER 10
 enum host_job_type {
 	JOB_SEND_PKT_ALL_PORTS,
 	JOB_PING_SEND_REQ,	

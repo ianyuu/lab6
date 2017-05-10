@@ -289,6 +289,7 @@ job_q_init(&job_q);
 int control_counter = 0;
 int localRootID = host_id;
 int localRootDist = 0;
+int count = 0;
 while(1) {
 	/* Execute command from manager, if any */
 
@@ -490,10 +491,10 @@ while(1) {
 					free(new_job);
 			}
 		}
-		else if (control_counter >= MAXCOUNTERTIME) {
+		else if ((control_counter >= MAXCOUNTERTIME) && count < MAXCOUNTER) {
 				control_packet = (struct packet *) malloc(sizeof(struct packet));
 				/*
-				 * Build and send control pcaket
+				 * Build and send control packet
 				 */
 				 for (i = 0; i < node_port_num; i++) {
 				 	control_packet->src = host_id;
@@ -505,8 +506,10 @@ while(1) {
 					control_packet->payload[2] = 'H';
 					control_packet->payload[3] = 'Y';
 				 	packet_send(node_port[i], control_packet);
-//				 	printf("Control Packet Payload: %s\n", control_packet->payload);
+				 	//printf("control packet local root id = %d %c\n", control_packet->payload[0],control_packet->payload[0]);
+				 	//printf("Control Packet Payload: %s\n", control_packet->payload);
 				 }
+				 count++;
 				 control_counter = 0;
 				 free(control_packet);
 		}
