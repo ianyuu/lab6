@@ -406,7 +406,7 @@ while(1) {
 		n = packet_recv(node_port[k], in_packet);
 		
 		if ((n > 0) && ((int) in_packet->dst == host_id)) {
-			printf("Packet received at Host: %d\n", host_id);
+			//printf("Packet received at Host: %d\n", host_id);
 			new_job = (struct host_job *) 
 				malloc(sizeof(struct host_job));
 			new_job->in_port_index = k;

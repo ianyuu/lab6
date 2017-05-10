@@ -94,7 +94,7 @@ void switch_main(int switch_id) {
 			n = packet_recv(node_port[i], in_packet);	
 			/* If switch receives non control-packet, create new job */
 			if ((n > 0) && (in_packet->type != PKT_CONTROL)) {
-				printf("Packet received at Switch: %d\n", switch_id);
+				//printf("Packet received at Switch: %d\n", switch_id);
 				new_job = (struct host_job *) malloc(sizeof(struct host_job));
 				//printf("adding to job queue\n");
 				new_job->in_port_index = i;
@@ -198,16 +198,16 @@ void switch_main(int switch_id) {
 						}
 					}
 				}
-				printf("-----------------Switch ID %d-------------------\n", switch_id);
-				printf("Valid\t");
-				printf("Destination (Host ID)\t");
-				printf("Port #\t\n");
-				for (n = 0; n < PORTMAX; n++) {
-					if(forwarding_table[n].valid) {
-						printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
-					}
-				}
-				printf("-----------------------------------------------\n");
+				//printf("-----------------Switch ID %d-------------------\n", switch_id);
+				//printf("Valid\t");
+				//printf("Destination (Host ID)\t");
+				//printf("Port #\t\n");
+				//for (n = 0; n < PORTMAX; n++) {
+				//	if(forwarding_table[n].valid) {
+				//		printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
+				//	}
+				//}
+				//printf("-----------------------------------------------\n");
 				
 				/* Check if destination is in table */
 				entry_id = containsEntry(forwarding_table, in_packet->dst, PORTMAX);
