@@ -22,7 +22,7 @@
 #define MAX_FILE_NAME 100
 #define PKT_PAYLOAD_MAX 100
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
-#define MAXCOUNTERTIME 100
+#define MAXCOUNTERTIME 10
 /* Types of packets */
 
 struct file_buf {
@@ -405,6 +405,7 @@ while(1) {
 		n = packet_recv(node_port[k], in_packet);
 		
 		if ((n > 0) && ((int) in_packet->dst == host_id)) {
+			printf("Packet received at Host: %d\n", host_id);
 			new_job = (struct host_job *) 
 				malloc(sizeof(struct host_job));
 			new_job->in_port_index = k;
@@ -496,7 +497,7 @@ while(1) {
 				 */
 				 for (i = 0; i < node_port_num; i++) {
 				 	control_packet->src = host_id;
-				 	control_packet->dst = 0;
+				 	control_packet->dst = -1;
 				 	control_packet->type = PKT_CONTROL;
 				 	control_packet->length = 4;
 					control_packet->payload[0] = localRootID + '0';

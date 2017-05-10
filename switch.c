@@ -19,7 +19,7 @@
 #include "switch.h"
 
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
-#define MAXCOUNTERTIME 100
+#define MAXCOUNTERTIME 10
 #define PORTMAX	100
 
 
@@ -93,6 +93,7 @@ void switch_main(int switch_id) {
 			n = packet_recv(node_port[i], in_packet);	
 			/* If switch receives non control-packet, create new job */
 			if ((n > 0) && (in_packet->type != PKT_CONTROL)) {
+				printf("Packet received at Switch: %d\n", switch_id);
 				new_job = (struct host_job *) malloc(sizeof(struct host_job));
 				//printf("adding to job queue\n");
 				new_job->in_port_index = i;
@@ -136,7 +137,10 @@ void switch_main(int switch_id) {
 				else {
 					localPortTree[i] = 'N';
 				}
-//				printf("localPortTree[%d] = %c\n", i, localPortTree[i]);
+				if(localPortTree[i] == 'N') {
+					//printf("Switch %d Local Variables: %d%d%d%c\n", switch_id, localRootID, localParent, localRootDist, localPortTree[i]);
+					//printf("From: %d To: %d\n", in_packet->src, switch_id);
+				}
 			}
 			else {
 				if (control_counter >= MAXCOUNTERTIME) {
@@ -152,7 +156,7 @@ void switch_main(int switch_id) {
 						control_packet->payload[0] = localRootID + '0';
 						control_packet->payload[1] = localRootDist + '0';
 						control_packet->payload[2] = 'S';
-						if (i == localParent) {
+						if (k == localParent) {
 							control_packet->payload[3] = 'Y'; 
 						}
 						else {
@@ -192,30 +196,32 @@ void switch_main(int switch_id) {
 						}
 					}
 				}
-				printf("---------------------------------------\n");
-				printf("Valid\t");
-				printf("Destination (Host ID)\t");
-				printf("Port #\t\n");
-				for (n = 0; n < PORTMAX; n++) {
-					if(forwarding_table[n].valid) {
-						printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
-					}
-				}
-				printf("---------------------------------------\n");
+				//printf("-----------------Switch ID %d-------------------\n", switch_id);
+				//printf("Valid\t");
+				//printf("Destination (Host ID)\t");
+				//printf("Port #\t\n");
+				//for (n = 0; n < PORTMAX; n++) {
+				//	if(forwarding_table[n].valid) {
+				//		printf("%d\t%d\t\t\t%d\n", forwarding_table[n].valid, forwarding_table[n].dst_switch_id, forwarding_table[n].port);
+				//	}
+				//}
+				//printf("-----------------------------------------------\n");
 				
 				/* Check if destination is in table */
 				entry_id = containsEntry(forwarding_table, in_packet->dst, PORTMAX);
 
 				if (entry_id != -1) {
 					//printf("found entry in table\n");
-					packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
+					if(localPortTree[forwarding_table[entry_id].port] == 'Y') {
+						packet_send(node_port[forwarding_table[entry_id].port],new_job->packet);
+					}
 				}
 				/* Sends packet on all ports */
 				else {
 					for (j = 0; j < node_port_num; j++) {
-//						printf("localPortTree[%d] = %c\n", j, localPortTree[j]);
+						//printf("Switch %d localPortTree[%d] = %c\n", switch_id, j, localPortTree[j]);
 						if ((j != new_job->in_port_index) && (localPortTree[j] == 'Y'))  {
-							//printf("Sending on port %d...\n", j);
+						//	printf("Sending on port %d...\n", j);
 							packet_send(node_port[j], new_job->packet);
 						}
 					}	
