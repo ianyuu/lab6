@@ -47,6 +47,7 @@ while(1) {
 	printf("   (p) Ping a host\n");
 	printf("   (u) Upload a file to a host\n");
 	printf("   (d) Download a file from a host\n");
+	printf("   (r) Register Domain Name\n");
 	printf("   (q) Quit\n");
 	printf("   Enter Command: ");
 	do {
@@ -63,6 +64,7 @@ while(1) {
 		case 'p':
 		case 'u':
 		case 'd':
+		case 'r':
 		case 'q': return cmd;
 		default: 
 			printf("Invalid: you entered %c\n\n", cmd);

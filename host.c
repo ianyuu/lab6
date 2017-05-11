@@ -229,7 +229,9 @@ int node_port_num;            // Number of node ports
 
 int ping_reply_received;
 int ping_reply_download;
-int ping_reply_DNS;
+int ping_reply_dns = 0;
+char answer;
+char req_id;		
 
 int i, k, n;
 int dst;
@@ -396,8 +398,8 @@ while(1) {
 				for(i=0; name[i] != '\0'; i++) {
 					new_packet->payload[i] = name[i];
 				}
-				new_packet->payload->length = i+1;
-				new-packet->payload[i] = '\0';
+				new_packet->length = i+1;
+				new_packet->payload[i] = '\0';
 
 				new_job = (struct host_job *)malloc(sizeof(struct host_job));
 				new_job->packet = new_packet;
@@ -405,7 +407,7 @@ while(1) {
 				job_q_add(&job_q, new_job);
 
 				new_job2 = (struct host_job *)malloc(sizeof(struct host_job));
-				new_job2->type = JOB_DNS_WAIT;
+				new_job2->type = JOB_DNS_WAIT_REG;
 				new_job2->ping_timer = 10;
 				job_q_add(&job_q, new_job2);
 
@@ -949,14 +951,12 @@ while(1) {
 		break;
 
 	case JOB_DNS_WAIT_REQ:
-		char answer;
-		char req_id;		
 
 		if(ping_reply_dns == 1) {
 			answer = new_job->packet->payload[0];
-			if(answer = 'Y'){
+			if(answer == 'Y'){
 				req_id = new_job->packet->payload[1];
-				n = sprintf(man_reply_msg,"The DNS responded with id: &d", (int)req_id);
+				n = sprintf(man_reply_msg,"The DNS responded with id: %d", (int)req_id);
 				man_reply_msg[n] = '\0';
 				write(man_port->send_fd, man_reply_msg, n+1);
 			}
@@ -982,7 +982,8 @@ while(1) {
 	usleep(TENMILLISEC);
 
 } /* End of while loop */
-
+}
+}
 }
 
 

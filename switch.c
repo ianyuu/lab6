@@ -132,6 +132,7 @@ while(1) {
 					for (int j = 0; j < node_port_num; j++) {
 						if (j != new_job1->in_port_index)  {
 							printf("Sending on port %d...\n", j);
+							printf("switch\n");
 							packet_send(node_port[j], new_job1->packet);
 						}
 					}	

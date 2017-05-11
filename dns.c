@@ -6,7 +6,7 @@
 #include <sys/types.h>
 
 #include <unistd.h>
-#include <fcnt1.h>
+#include <fcntl.h>
 
 #include "main.h"
 #include "net.h"
@@ -63,8 +63,8 @@ job_q_init(&job_q);
 
 while(1) {
 	for(k=0; k<node_port_num; k++) {
-		int_packet = (struct packet *) malloc(sizeof(struct packet));
-		n = packet_recv(node_port[k], in packet);
+		in_packet = (struct packet *) malloc(sizeof(struct packet));
+		n = packet_recv(node_port[k], in_packet);
 
 		if((n>0) && ((int) in_packet->dst == host_id)) {
 			new_job = (struct host_job *)
@@ -80,7 +80,7 @@ while(1) {
 					break;
 
 				case (char) PKT_DNS_REQ:
-					new_job->type = JOB_DNS_REQ;
+					new_job->type = JOB_DNS_SEND_REQ;
 					job_q_add(&job_q, new_job);
 				default:
 					free(in_packet);
@@ -99,7 +99,7 @@ while(1) {
 
 		switch(new_job->type) {
 			
-			case SEND_PKT_ALL_PORTS:
+			case JOB_SEND_PKT_ALL_PORTS:
 				for(k=0; k<node_port_num; k++)
 					packet_send(node_port[k], new_job->packet);
 				
@@ -127,13 +127,13 @@ while(1) {
 					
 					new_packet = (struct packet *)malloc(sizeof(struct packet));
 					new_packet->dst = new_job->packet->src;
-					new_packet->src = (char) host_id;
+					new_packet->src = host_id;
 					new_packet->type = PKT_DNS_REPLY_REG;
 					new_packet->length = 0;
 
 					new_job2 = (struct host_job *)malloc(sizeof(struct host_job));
 					new_job2->type = JOB_SEND_PKT_ALL_PORTS;
-					new_job2->new_packet;
+					new_job2->packet = new_packet;
 
 					job_q_add(&job_q, new_job2);
 				}	
@@ -144,7 +144,7 @@ while(1) {
 			
 			//sends physical ID of a given domain name to the requesting host
 			//will reply only if the file exists.
-			case JOB_DNS_REQ:
+			case JOB_DNS_REPLY_REQ:
 				n = sprintf(name, "%s", new_job->packet->payload);
 				name[n] = '\0';
 						
@@ -169,7 +169,7 @@ while(1) {
 				if(found == TRUE && id_table[i] != -1) {
 					new_packet->payload[0] = 'Y';
 					new_packet->payload[1] = (char) id_table[i];
-					new_packet->payload[] = '\0'; 
+					new_packet->payload[2] = '\0'; 
 					new_packet->length = n+1;
 				}
 				else {
