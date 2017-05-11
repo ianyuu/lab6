@@ -499,17 +499,17 @@ else {
 		else if (node_type == 'D') {
 			fscanf(fp, " %d ", &node_id);
 			g_net_node[i].type = DNS;
-			g_net_node[i].id = node_id;
+			g_net_node[i].id = 100;
 		}
 		else {
 			printf(" net.c: Unidentified Node Type\n");
 		}
 
-		if (i != node_id) {
-			printf(" net.c: Incorrect node id\n");
-			fclose(fp);
-			return(0);
-		}
+		//if (i != node_id) {
+		//	printf(" net.c: Incorrect node id\n");
+		//	fclose(fp);
+		//	return(0);
+		//}
 	}
 }
 	/* 

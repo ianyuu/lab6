@@ -39,6 +39,7 @@ int id_table[MAX_ENTRY];
 char name_table[MAX_ENTRY][MAX_NAME_LENGTH+1]; 
 
 int i, j, n, k;
+host_id = 2;
 for(i=0; i<MAX_ENTRY; i++)
 	id_table[i] = -1;
 
@@ -58,9 +59,7 @@ for(k=0; k<node_port_num; k++) {
 	node_port[k] = p;
 	p = p->next;
 }
-
 job_q_init(&job_q);
-
 while(1) {
 	for(k=0; k<node_port_num; k++) {
 		in_packet = (struct packet *) malloc(sizeof(struct packet));
@@ -71,15 +70,16 @@ while(1) {
 				malloc(sizeof(struct host_job));
 			new_job->in_port_index = k;
 			new_job->packet = in_packet;
-
+			printf("received packet at dns\n");
 			switch(in_packet->type) {
 				
-				case (char) PKT_DNS_REGISTER:
+				case PKT_DNS_REGISTER:
+					printf("pkt dns register\n");
 					new_job->type = JOB_DNS_REGISTER;
 					job_q_add(&job_q, new_job);
 					break;
 
-				case (char) PKT_DNS_REQ:
+				case PKT_DNS_REQ:
 					new_job->type = JOB_DNS_SEND_REQ;
 					job_q_add(&job_q, new_job);
 				default:
@@ -100,15 +100,16 @@ while(1) {
 		switch(new_job->type) {
 			
 			case JOB_SEND_PKT_ALL_PORTS:
-				for(k=0; k<node_port_num; k++)
+				for(k=0; k<node_port_num; k++) {
 					packet_send(node_port[k], new_job->packet);
-				
+				}	
 				free(new_job->packet);
 				free(new_job);
 				break;
 		
 			//adds host entry to the table. does NOT account for multiple entries from same host
 			case JOB_DNS_REGISTER:	
+				printf("job dns register\n");
 				id = new_job->packet->src;	
 				n = sprintf(name, "%s", new_job->packet->payload);
 	

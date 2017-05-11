@@ -408,7 +408,7 @@ while(1) {
 
 				new_job2 = (struct host_job *)malloc(sizeof(struct host_job));
 				new_job2->type = JOB_DNS_WAIT_REG;
-				new_job2->ping_timer = 10;
+				new_job2->ping_timer = 100;
 				job_q_add(&job_q, new_job2);
 
 				break;

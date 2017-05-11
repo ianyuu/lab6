@@ -68,8 +68,8 @@ for (int k = 0; k < node_port_num; k++) {
 job_q_init(&job_q);
 
 /* Initialize Forwarding Table */
-struct forwarding_table_entry forwarding_table[node_port_num];
-for (int i = 0; i < node_port_num; i++) {
+struct forwarding_table_entry forwarding_table[200];
+for (int i = 0; i < 200; i++) {
 	forwarding_table[i].valid = 0;
 	forwarding_table[i].dst_host_id = 0;
 	forwarding_table[i].port = 0;
@@ -103,7 +103,7 @@ while(1) {
 			/*
 			 * Check if entry exists in forwarding table 
 			 */
-				for (int j = 0; j < node_port_num; j++) {
+				for (int j = 0; j < 200; j++) {
 					if ((forwarding_table[j].valid == 1) && (new_job1->packet->dst == forwarding_table[j].dst_host_id )) {
 						new_entry = '0';
 
@@ -117,7 +117,7 @@ while(1) {
 			/*
 			 * Adds source packet to forwarding table.
 			 */
-				for (int j = 0; j < node_port_num; j++) {
+				for (int j = 0; j < 200; j++) {
 					if ((forwarding_table[j].valid == 0) && (entry_exists == '0')) {
 						forwarding_table[j].valid = 1;
 						forwarding_table[j].dst_host_id = (int)new_job1->packet->src;
@@ -129,10 +129,9 @@ while(1) {
 					/* Sends packet on all ports except source port
 					 * Should it send only on unknown ports?
 					 **/
-					for (int j = 0; j < node_port_num; j++) {
+					for (int j = 0; j < 200; j++) {
 						if (j != new_job1->in_port_index)  {
 							printf("Sending on port %d...\n", j);
-							printf("switch\n");
 							packet_send(node_port[j], new_job1->packet);
 						}
 					}	

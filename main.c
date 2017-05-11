@@ -50,7 +50,7 @@ for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
 			switch_main(p_node->id);
 		}
 		else if (p_node->type == DNS) {
-	    	dns_main(p_node->id);
+	    	dns_main(100);
 	    }	
 		return;
 	}  
