@@ -263,6 +263,31 @@ usleep(TENMILLISEC);
 		usleep(TENMILLISEC);
 	}
 
+	void dns_register(struct man_port_at_man *curr_host)
+	{
+		int n;
+		char name[NAME_LENGTH];
+		char msg[NAME_LENGTH];
+		char reply[NAME_LENGTH];
+	
+		printf("Enter domain name of current host to be registered: ");
+		scanf("%s", name);
+		printf("\n");
+		
+		n = sprintf(msg, "r %s", name);
+		write(curr_host->send_fd, msg, n);
+		
+		n=0;
+		while(n<=0) {
+			usleep(TENMILLISEC);
+			n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
+		}
+		reply[n] = '\0';
+		printf("%s\n", reply);
+		usleep(TENMILLISEC);
+
+	}
+
 /***************************** 
  * Main loop of the manager  *
  *****************************/
@@ -306,6 +331,9 @@ while(1) {
 			break;
 		case 'd': /* Download a file from a host */
 			file_download(curr_host);
+			break;
+		case 'r': //register host with dns
+			dns_register(curr_host);
 			break;
 		case 'q':  /* Quit */
 			return;

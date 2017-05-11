@@ -12,6 +12,7 @@
 #include "man.h"
 #include "host.h"
 #include "switch.h"
+#include "dns.h"
 
 void main()
 {

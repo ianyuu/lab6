@@ -167,8 +167,9 @@ while(1) {
 				//if id_table[i] == -1 then it means that the reocreded name is not associated
 				//with an id.
 				if(found == TRUE && id_table[i] != -1) {
-					n = sprintf(new_packet->payload, "Y %d", id_table[i]);
-					new_packet->payload[n] = '\0'; 
+					new_packet->payload[0] = 'Y';
+					new_packet->payload[1] = (char) id_table[i];
+					new_packet->payload[] = '\0'; 
 					new_packet->length = n+1;
 				}
 				else {

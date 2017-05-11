@@ -229,6 +229,7 @@ int node_port_num;            // Number of node ports
 
 int ping_reply_received;
 int ping_reply_download;
+int ping_reply_DNS;
 
 int i, k, n;
 int dst;
@@ -360,7 +361,7 @@ while(1) {
 					new_packet->payload[i]
 						= name[i];
 				}
-				new_packet->length = i;
+				new_packet->length = i+1;
 				new_packet->payload[i] = '\0';
 				
 				new_job = (struct host_job *)
@@ -383,7 +384,32 @@ while(1) {
 				job_q_add(&job_q, new_job2);
 
 				break;
- 			
+			 			
+			case 'r':
+				sscanf(man_msg, "%s", name);
+
+				new_packet = (struct packet *)malloc(sizeof(struct packet));
+				new_packet->src = host_id;
+				new_packet->dst = (char) 100;
+				new_packet->type = PKT_DNS_REGISTER;
+
+				for(i=0; name[i] != '\0'; i++) {
+					new_packet->payload[i] = name[i];
+				}
+				new_packet->payload->length = i+1;
+				new-packet->payload[i] = '\0';
+
+				new_job = (struct host_job *)malloc(sizeof(struct host_job));
+				new_job->packet = new_packet;
+				new_job->type = JOB_SEND_PKT_ALL_PORTS;
+				job_q_add(&job_q, new_job);
+
+				new_job2 = (struct host_job *)malloc(sizeof(struct host_job));
+				new_job2->type = JOB_DNS_WAIT;
+				new_job2->ping_timer = 10;
+				job_q_add(&job_q, new_job2);
+
+				break;
 			default:
 			;
 		}
@@ -477,6 +503,18 @@ while(1) {
 					new_job->type
 						= JOB_FILE_DOWNLOAD_END;
 					job_q_add(&job_q, new_job);
+					break;
+				
+				case (char) PKT_DNS_REPLY_REG:
+					ping_reply_dns = 1;	
+					free(in_packet);
+					free(new_job);
+					break;
+
+				case (char) PKT_DNS_REPLY_REQ:
+					ping_reply_dns = 1;
+					free(in_packet);
+					free(new_job);	
 					break;
 
 				default:
@@ -762,7 +800,7 @@ while(1) {
 		//wait for confirmation that the requested file is present in req host
 	
 		if(ping_reply_download == 1) {
-			n = sprintf(man_reply_msg, "File download start...");
+			n = sprintf(man_reply_msg, "file download start...");
 			man_reply_msg[n] = '\0';
 			write(man_port->send_fd, man_reply_msg, n+1);
 			
@@ -781,7 +819,7 @@ while(1) {
 			job_q_add(&job_q, new_job);
 		}
 		else {
-			n = sprintf(man_reply_msg, "File not found...");
+			n = sprintf(man_reply_msg, "file not found...");
 			man_reply_msg[n] = '\0';
 			write(man_port->send_fd, man_reply_msg, n+1);
 			free(new_job);
@@ -890,11 +928,56 @@ while(1) {
 			else {}
 		}
 
-		break;
+	case JOB_DNS_WAIT_REG:
 	
+		if(ping_reply_dns == 1) {
+			n = sprintf(man_reply_msg, "Host succesfully registered...");
+			man_reply_msg[n] = '\0';
+			write(man_port->send_fd, man_reply_msg, n+1);		
 		}
-	}
+		else if(new_job->ping_timer > 1) {
+			new_job->ping_timer--;
+			job_q_add(&job_q, new_job);
+		}
+		else {
+			n = sprintf(man_reply_msg, "Host NOT registered...");
+			man_reply_msg[n] = '\0';
+			write(man_port->send_fd, man_reply_msg, n+1);
+			free(new_job);
+		}
 
+		break;
+
+	case JOB_DNS_WAIT_REQ:
+		char answer;
+		char req_id;		
+
+		if(ping_reply_dns == 1) {
+			answer = new_job->packet->payload[0];
+			if(answer = 'Y'){
+				req_id = new_job->packet->payload[1];
+				n = sprintf(man_reply_msg,"The DNS responded with id: &d", (int)req_id);
+				man_reply_msg[n] = '\0';
+				write(man_port->send_fd, man_reply_msg, n+1);
+			}
+			else {
+				n = sprintf(man_reply_msg,"The inquired domain mname is not registered...");
+				man_reply_msg[n] = '\0';
+				write(man_port->send_fd, man_reply_msg, n+1);
+			}
+		}
+		else if(new_job->ping_timer > 1) {
+			new_job->ping_timer--;
+			job_q_add(&job_q, new_job);
+		}
+		else {
+			n = sprintf(man_reply_msg, "No reply to request...");
+			man_reply_msg[n] = '\0';
+			write(man_port->send_fd, man_reply_msg, n+1);
+			free(new_job);
+		}
+
+		
 	/* The host goes to sleep for 10 ms */
 	usleep(TENMILLISEC);
 

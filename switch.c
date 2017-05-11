@@ -15,6 +15,7 @@
 #include "host.h"
 #include "packet.h"
 #include "switch.h"
+#include "dns.h"
 
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
 

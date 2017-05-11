@@ -49,3 +49,7 @@ struct packet { /* struct for a packet */
 #define PKT_PING_DOWNLOAD	6
 #define PKT_FILE_DOWNLOAD_CONT	7
 #define PKT_FILE_DOWNLOAD_END	8
+#define PKT_DNS_REGISTER	9
+#define PKT_DNS_REQ		10
+#define PKT_DNS_REPLY_REG	11
+#define PKT_DNS_REPLY_REQ	12
