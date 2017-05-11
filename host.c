@@ -388,11 +388,12 @@ while(1) {
 				break;
 			 			
 			case 'r':
+				ping_reply_received = 0;
 				sscanf(man_msg, "%s", name);
 
 				new_packet = (struct packet *)malloc(sizeof(struct packet));
 				new_packet->src = host_id;
-				new_packet->dst = (char) 100;
+				new_packet->dst = (int) 100;
 				new_packet->type = PKT_DNS_REGISTER;
 
 				for(i=0; name[i] != '\0'; i++) {
